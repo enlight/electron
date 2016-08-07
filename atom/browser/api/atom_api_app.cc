@@ -571,6 +571,7 @@ void App::BuildPrototype(
 #endif
 #if defined(OS_WIN)
       .SetMethod("setUserTasks", base::Bind(&Browser::SetUserTasks, browser))
+      .SetMethod("setJumpList", base::Bind(&Browser::SetJumpList, browser))
 #endif
 #if defined(OS_LINUX)
       .SetMethod("isUnityRunning",
