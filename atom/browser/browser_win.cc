@@ -86,6 +86,46 @@ using atom::JumpListCategory;
 using atom::JumpListResult;
 
 template<>
+struct Converter<JumpListItem::Type> {
+  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
+                     JumpListItem::Type* out) {
+    std::string item_type;
+    if (!ConvertFromV8(isolate, val, &item_type))
+      return false;
+
+    if (item_type == "task")
+      *out = JumpListItem::Type::TASK;
+    else if (item_type == "separator")
+      *out = JumpListItem::Type::SEPARATOR;
+    else if (item_type == "file")
+      *out = JumpListItem::Type::FILE;
+    else
+      return false;
+
+    return true;
+  }
+
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   JumpListItem::Type val) {
+    std::string item_type;
+    switch (val) {
+      case JumpListItem::Type::TASK:
+        item_type = "task";
+        break;
+
+      case JumpListItem::Type::SEPARATOR:
+        item_type = "separator";
+        break;
+
+      case JumpListItem::Type::FILE:
+        item_type = "file";
+        break;
+    }
+    return mate::ConvertToV8(isolate, item_type);
+  }
+};
+
+template<>
 struct Converter<JumpListItem> {
   static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
                      JumpListItem* out) {
@@ -93,45 +133,41 @@ struct Converter<JumpListItem> {
     if (!ConvertFromV8(isolate, val, &dict))
       return false;
 
-    std::string item_type;
-    if (!dict.Get("type", &(item_type)))
+    if (!dict.Get("type", &(out->type)))
       return false;
 
-    if (item_type == "task") {
-      out->type = JumpListItem::Type::TASK;
-    } else if (item_type == "separator") {
-      out->type = JumpListItem::Type::SEPARATOR;
-      return true;
-    } else if (item_type == "file") {
-      out->type = JumpListItem::Type::FILE;
-    } else {
-      return false;
+    switch (out->type) {
+      case JumpListItem::Type::TASK:
+        if (!dict.Get("program", &(out->path)) ||
+            !dict.Get("title", &(out->title)))
+          return false;
+
+        if (dict.Get("iconPath", &(out->icon_path)) &&
+            !dict.Get("iconIndex", &(out->icon_index)))
+          return false;
+
+        dict.Get("arguments", &(out->arguments));
+        dict.Get("description", &(out->description));
+        return true;
+
+      case JumpListItem::Type::SEPARATOR:
+        return true;
+
+      case JumpListItem::Type::FILE:
+        return dict.Get("path", &(out->path));
     }
 
-    if (out->type == JumpListItem::Type::TASK) {
-      if (!dict.Get("program", &(out->path)) ||
-          !dict.Get("title", &(out->title)))
-        return false;
-
-      if (dict.Get("iconPath", &(out->icon_path)) &&
-          !dict.Get("iconIndex", &(out->icon_index)))
-        return false;
-
-      dict.Get("arguments", &(out->arguments));
-      dict.Get("description", &(out->description));
-
-      return true;
-    } else {  // file item
-      return dict.Get("path", &(out->path));
-    }
+    assert(false);
+    return false;
   }
 
   static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
                                    const JumpListItem& val) {
     mate::Dictionary dict = mate::Dictionary::CreateEmpty(isolate);
+    dict.Set("type", val.type);
+
     switch (val.type) {
       case JumpListItem::Type::TASK:
-        dict.Set("type", "task");
         dict.Set("program", val.path);
         dict.Set("arguments", val.arguments);
         dict.Set("title", val.title);
@@ -141,15 +177,59 @@ struct Converter<JumpListItem> {
         break;
 
       case JumpListItem::Type::SEPARATOR:
-        dict.Set("type", "separator");
         break;
 
       case JumpListItem::Type::FILE:
-        dict.Set("type", "file");
         dict.Set("path", val.path);
         break;
     }
     return dict.GetHandle();
+  }
+};
+
+template<>
+struct Converter<JumpListCategory::Type> {
+  static bool FromV8(v8::Isolate* isolate, v8::Local<v8::Value> val,
+                     JumpListCategory::Type* out) {
+    std::string category_type;
+    if (!ConvertFromV8(isolate, val, &category_type))
+      return false;
+
+    if (category_type == "tasks")
+      *out = JumpListCategory::Type::TASKS;
+    else if (category_type == "frequent")
+      *out = JumpListCategory::Type::FREQUENT;
+    else if (category_type == "recent")
+      *out = JumpListCategory::Type::RECENT;
+    else if (category_type == "custom")
+      *out = JumpListCategory::Type::CUSTOM;
+    else
+      return false;
+
+    return true;
+  }
+
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   JumpListCategory::Type val) {
+    std::string category_type;
+    switch (val) {
+      case JumpListCategory::Type::TASKS:
+        category_type = "tasks";
+        break;
+
+      case JumpListCategory::Type::FREQUENT:
+        category_type = "frequent";
+        break;
+
+      case JumpListCategory::Type::RECENT:
+        category_type = "recent";
+        break;
+
+      case JumpListCategory::Type::CUSTOM:
+        category_type = "custom";
+        break;
+    }
+    return mate::ConvertToV8(isolate, category_type);
   }
 };
 
@@ -161,20 +241,10 @@ struct Converter<JumpListCategory> {
     if (!ConvertFromV8(isolate, val, &dict))
       return false;
 
-    if (dict.Get("category", &(out->name)) && out->name.empty())
+    if (dict.Get("name", &(out->name)) && out->name.empty())
       return false;
 
-    std::string category_type;
-    if (dict.Get("type", &category_type)) {
-      if (category_type == "frequent")
-        out->type = JumpListCategory::Type::FREQUENT;
-      else if (category_type == "recent")
-        out->type = JumpListCategory::Type::RECENT;
-      else if (category_type == "custom")
-        out->type = JumpListCategory::Type::CUSTOM;
-      else
-        return false;
-    } else {
+    if (!dict.Get("type", &(out->type))) {
       if (out->name.empty())
         out->type = JumpListCategory::Type::TASKS;
       else
