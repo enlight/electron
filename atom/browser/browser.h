@@ -29,6 +29,36 @@ namespace gfx {
 class Image;
 }
 
+#if defined(OS_WIN)
+namespace atom {
+
+enum class JumpListResult {
+  SUCCESS = 0,
+  // In JS code this error will manifest as an exception.
+  ARGUMENT_ERROR = 1,
+  // Generic error, the runtime logs may provide some clues.
+  GENERIC_ERROR = 2,
+  // Custom categories can't contain separators.
+  CUSTOM_CATEGORY_SEPARATOR_ERROR = 3,
+  // The app isn't registered to handle a file type found in a custom category.
+  MISSING_FILE_TYPE_REGISTRATION_ERROR = 4,
+  // Custom categories can't be created due to user privacy settings.
+  CUSTOM_CATEGORY_ACCESS_DENIED_ERROR = 5,
+};
+
+}  // namespace atom
+
+namespace mate {
+
+template<>
+struct Converter<atom::JumpListResult> {
+  static v8::Local<v8::Value> ToV8(v8::Isolate* isolate,
+                                   atom::JumpListResult val);
+};
+
+}  // namespace mate
+#endif
+
 namespace atom {
 
 class AtomMenuModel;
@@ -159,7 +189,7 @@ class Browser : public WindowListObserver {
   bool SetUserTasks(const std::vector<UserTask>& tasks);
 
   // Set or remove a custom Jump List for the application.
-  void SetJumpList(v8::Local<v8::Value> val, mate::Arguments* args);
+  JumpListResult SetJumpList(v8::Local<v8::Value> val, mate::Arguments* args);
 
   // Returns the application user model ID, if there isn't one, then create
   // one from app's name.
