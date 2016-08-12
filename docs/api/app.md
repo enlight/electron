@@ -518,6 +518,9 @@ Adds `tasks` to the [Tasks][tasks] category of the JumpList on Windows.
 
 Returns `true` when the call succeeded, otherwise returns `false`.
 
+**Note:** If you'd like to customize the Jump List even more use
+`app.setJumpList(callback)` instead.
+
 ### `app.setJumpList(callback)` _Windows_
 
 * `callback` Function or `null`
