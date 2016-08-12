@@ -159,9 +159,6 @@ bool JumpList::CreateDestinationList() {
 }
 
 bool JumpList::Begin(int* min_items, std::vector<JumpListItem>* removed_items) {
-  DCHECK(min_items);
-  DCHECK(removed_items);
-
   if (!destinations_ && !CreateDestinationList())
     return false;
 
@@ -173,7 +170,12 @@ bool JumpList::Begin(int* min_items, std::vector<JumpListItem>* removed_items) {
   if (FAILED(destinations_->BeginList(&min_slots, IID_PPV_ARGS(&removed))))
     return false;
 
-  ConvertRemovedJumpListItems(removed, removed_items);
+  if (min_items)
+    *min_items = min_slots;
+
+  if (removed_items)
+    ConvertRemovedJumpListItems(removed, removed_items);
+
   return true;
 }
 

@@ -42,7 +42,7 @@ struct JumpListItem {
     FILE
   };
 
-  Type type;
+  Type type = Type::TASK;
   // For tasks this is the path to the program executable, for file links this
   // is the full filename.
   base::FilePath path;
@@ -50,7 +50,7 @@ struct JumpListItem {
   base::string16 title;
   base::string16 description;
   base::FilePath icon_path;
-  int icon_index;
+  int icon_index = 0;
 };
 
 struct JumpListCategory {
@@ -67,7 +67,7 @@ struct JumpListCategory {
     TASKS
   };
 
-  Type type;
+  Type type = Type::TASKS;
   base::string16 name;
   std::vector<JumpListItem> items;
 };
@@ -82,8 +82,12 @@ class JumpList {
   explicit JumpList(const base::string16& app_id) : app_id_(app_id) {}
 
   // Starts a new transaction, must be called before appending any categories,
-  // aborting or committing.
-  bool Begin(int* min_items, std::vector<JumpListItem>* removed_items);
+  // aborting or committing. After the method returns |min_items| will be
+  // indicate the minimum number of items that will be displayed in the
+  // Jump List, and |removed_items| will contain all the items the user has
+  // unpinned from the Jump List. Both parameters are optional.
+  bool Begin(int* min_items = nullptr,
+             std::vector<JumpListItem>* removed_items = nullptr);
   // Abandons any changes queued up since Begin() was called.
   bool Abort();
   // Commits any changes queued up since Begin() was called.
