@@ -646,12 +646,12 @@ app.setJumpList(
         {
           type: 'task', title: 'Recover Project',
           program: process.execPath, arguments: '--recover-project',
-          description: 'Recover Project',
+          description: 'Recover Project'
         }
       ]
-    },
+    }
   ]
-);
+)
 ```
 
 ### `app.makeSingleInstance(callback)`
