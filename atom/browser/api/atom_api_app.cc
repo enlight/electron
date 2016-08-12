@@ -44,6 +44,7 @@
 #include "ui/gfx/image/image.h"
 
 #if defined(OS_WIN)
+#include "atom/browser/ui/win/jump_list.h"
 #include "base/strings/utf_string_conversions.h"
 #endif
 

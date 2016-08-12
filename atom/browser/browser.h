@@ -31,21 +31,7 @@ class Image;
 
 #if defined(OS_WIN)
 namespace atom {
-
-enum class JumpListResult {
-  SUCCESS = 0,
-  // In JS code this error will manifest as an exception.
-  ARGUMENT_ERROR = 1,
-  // Generic error, the runtime logs may provide some clues.
-  GENERIC_ERROR = 2,
-  // Custom categories can't contain separators.
-  CUSTOM_CATEGORY_SEPARATOR_ERROR = 3,
-  // The app isn't registered to handle a file type found in a custom category.
-  MISSING_FILE_TYPE_REGISTRATION_ERROR = 4,
-  // Custom categories can't be created due to user privacy settings.
-  CUSTOM_CATEGORY_ACCESS_DENIED_ERROR = 5,
-};
-
+enum class JumpListResult : int;
 }  // namespace atom
 
 namespace mate {
